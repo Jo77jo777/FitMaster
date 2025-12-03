@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace FitMaster
 {
     // ----------------------------------------
-    // Model: Mitglieder
+    // Model: Mitglied
     // ----------------------------------------
     public class Member
     {
