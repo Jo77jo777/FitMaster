@@ -15,7 +15,7 @@ namespace FitMaster
 
         public string GetInfo()
         {
-            return "ID: " + Id + ", Name: " + Name + ", Tarif: " + Tarif + ", Aktiv: " + IsActive;
+            return $"ID: {Id}, Name: {Name}, Tarif: {Tarif}, Aktiv: {IsActive}";
         }
     }
 
@@ -39,6 +39,123 @@ namespace FitMaster
     }
 
     // ----------------------------------------
+    // Service: Benutzerverwaltung + Login
+    // ----------------------------------------
+    public class UserService
+    {
+        private List<User> users = new List<User>();
+        public User LoggedInUser { get; private set; }
+
+        public UserService()
+        {
+            // Standard-Demo-Benutzer
+            users.Add(new User { Username = "admin", Password = "1234", Role = UserRole.Admin });
+            users.Add(new User { Username = "mitarbeiter", Password = "0000", Role = UserRole.Mitarbeiter });
+        }
+
+        // LOGIN
+        public bool Login()
+        {
+            Console.WriteLine("\n--- Login ---");
+            Console.Write("Benutzername: ");
+            string username = Console.ReadLine();
+
+            Console.Write("Passwort: ");
+            string pw = Console.ReadLine();
+
+            foreach (var u in users)
+            {
+                if (u.Username == username && u.Password == pw)
+                {
+                    LoggedInUser = u;
+                    Console.WriteLine($"Login erfolgreich! Eingeloggt als: {u.Username} ({u.Role})");
+                    return true;
+                }
+            }
+
+            Console.WriteLine("Login fehlgeschlagen!");
+            return false;
+        }
+
+        // Benutzer anzeigen
+        public void ListUsers()
+        {
+            Console.WriteLine("\n--- Benutzerliste ---");
+            foreach (var u in users)
+            {
+                Console.WriteLine($"Benutzer: {u.Username}, Rolle: {u.Role}");
+            }
+        }
+
+        // Benutzer hinzufügen
+        public void AddUser()
+        {
+            Console.WriteLine("\n--- Benutzer hinzufügen ---");
+            Console.Write("Benutzername: ");
+            string name = Console.ReadLine();
+
+            Console.Write("Passwort: ");
+            string pw = Console.ReadLine();
+
+            Console.Write("Rolle (Admin/Mitarbeiter): ");
+            string roleInput = Console.ReadLine().ToLower();
+
+            UserRole role = roleInput == "admin" ? UserRole.Admin : UserRole.Mitarbeiter;
+
+            users.Add(new User { Username = name, Password = pw, Role = role });
+
+            Console.WriteLine("Benutzer erfolgreich angelegt!");
+        }
+
+        // Benutzer löschen
+        public void DeleteUser()
+        {
+            Console.WriteLine("\n--- Benutzer löschen ---");
+            Console.Write("Benutzername: ");
+            string name = Console.ReadLine();
+
+            var user = users.Find(u => u.Username == name);
+
+            if (user == null)
+            {
+                Console.WriteLine("Benutzer nicht gefunden!");
+                return;
+            }
+
+            if (user == LoggedInUser)
+            {
+                Console.WriteLine("Du kannst dich nicht selbst löschen!");
+                return;
+            }
+
+            users.Remove(user);
+            Console.WriteLine("Benutzer gelöscht!");
+        }
+
+        // Passwort ändern
+        public void ChangePassword()
+        {
+            Console.WriteLine("\n--- Passwort ändern ---");
+            Console.Write("Benutzername: ");
+            string name = Console.ReadLine();
+
+            var user = users.Find(u => u.Username == name);
+
+            if (user == null)
+            {
+                Console.WriteLine("Benutzer nicht gefunden!");
+                return;
+            }
+
+            Console.Write("Neues Passwort: ");
+            string pw = Console.ReadLine();
+            user.Password = pw;
+
+            Console.WriteLine("Passwort wurde geändert!");
+        }
+    }
+
+    // ----------------------------------------
     // Service: Mitgliederverwaltung
     // ----------------------------------------
     public class MembersService
@@ -59,23 +176,21 @@ namespace FitMaster
             if (members.Count == 0)
             {
                 Console.WriteLine("Keine Mitglieder vorhanden.");
+                return;
             }
-            else
-            {
-                foreach (var m in members)
-                    Console.WriteLine(m.GetInfo());
-            }
+
+            foreach (var m in members)
+                Console.WriteLine(m.GetInfo());
         }
 
         // Mitglied hinzufügen
         public void AddMember()
         {
             Console.WriteLine("\n--- Neues Mitglied hinzufügen ---");
-
             Console.Write("Name: ");
             string name = Console.ReadLine();
 
-            Console.Write("Tarif (Basic / Premium / VIP): ");
+            Console.Write("Tarif (Basic/Premium/VIP): ");
             string tarif = Console.ReadLine();
 
             Member newMember = new Member
@@ -87,7 +202,6 @@ namespace FitMaster
             };
 
             members.Add(newMember);
-
             Console.WriteLine("Mitglied erfolgreich hinzugefügt!");
         }
 
@@ -103,7 +217,7 @@ namespace FitMaster
                 return;
             }
 
-            Member m = members.Find(x => x.Id == id);
+            var m = members.Find(x => x.Id == id);
             if (m == null)
             {
                 Console.WriteLine("Mitglied nicht gefunden!");
@@ -119,9 +233,9 @@ namespace FitMaster
             if (newTarif != "") m.Tarif = newTarif;
 
             Console.Write("Aktiv? (j/n): ");
-            string activeInput = Console.ReadLine();
-            if (activeInput == "j") m.IsActive = true;
-            if (activeInput == "n") m.IsActive = false;
+            string active = Console.ReadLine();
+            if (active == "j") m.IsActive = true;
+            if (active == "n") m.IsActive = false;
 
             Console.WriteLine("Mitglied erfolgreich aktualisiert!");
         }
@@ -138,7 +252,7 @@ namespace FitMaster
                 return;
             }
 
-            Member m = members.Find(x => x.Id == id);
+            var m = members.Find(x => x.Id == id);
             if (m == null)
             {
                 Console.WriteLine("Mitglied nicht gefunden!");
@@ -151,17 +265,25 @@ namespace FitMaster
     }
 
     // ----------------------------------------
-    //  Hauptprogramm
+    // Hauptprogramm
     // ----------------------------------------
     public class Program
     {
         private static MembersService membersService;
+        private static UserService userService;
 
         public static void Main(string[] args)
         {
             membersService = new MembersService();
-            Console.Title = "FitMaster – Fitnessstudio-Verwaltungssystem (Tag 2 + 3)";
+            userService = new UserService();
+
+            Console.Title = "FitMaster – Fitnessstudio-Verwaltungssystem";
+
             ShowWelcomeScreen();
+
+            // Login erzwingen
+            while (!userService.Login()) { }
+
             RunMainMenu();
         }
 
@@ -175,12 +297,13 @@ namespace FitMaster
         private static void RunMainMenu()
         {
             bool running = true;
+
             while (running)
             {
                 Console.WriteLine("\n--- HAUPTMENÜ ---");
                 Console.WriteLine("1) Mitglieder verwalten");
-                Console.WriteLine("2) Anwesenheit erfassen");
-                Console.WriteLine("3) Login / Benutzerverwaltung");
+                Console.WriteLine("2) Anwesenheit erfassen (noch nicht)");
+                Console.WriteLine("3) Benutzer verwalten");
                 Console.WriteLine("4) Beenden");
                 Console.Write("Auswahl: ");
 
@@ -191,16 +314,20 @@ namespace FitMaster
                     case "1":
                         ShowMembersMenu();
                         break;
+
                     case "2":
-                        Console.WriteLine("→ Anwesenheitssystem (noch nicht implementiert)");
+                        Console.WriteLine("Anwesenheitssystem wird später implementiert.");
                         break;
+
                     case "3":
-                        Console.WriteLine("→ Login & Rollen (Tag 4)");
+                        ShowUserMenu();
                         break;
+
                     case "4":
                         running = false;
                         Console.WriteLine("Programm wird beendet...");
                         break;
+
                     default:
                         Console.WriteLine("Ungültige Eingabe!");
                         break;
@@ -208,13 +335,15 @@ namespace FitMaster
             }
         }
 
+        // Mitglieder-Menü
         private static void ShowMembersMenu()
         {
             bool back = false;
+
             while (!back)
             {
-                Console.WriteLine("\n--- MITGLIEDER ---");
-                Console.WriteLine("1) Liste anzeigen");
+                Console.WriteLine("\n--- MITGLIEDER-MENÜ ---");
+                Console.WriteLine("1) Mitgliederliste anzeigen");
                 Console.WriteLine("2) Mitglied hinzufügen");
                 Console.WriteLine("3) Mitglied bearbeiten");
                 Console.WriteLine("4) Mitglied löschen");
@@ -225,33 +354,51 @@ namespace FitMaster
 
                 switch (input)
                 {
-                    case "1":
-                        membersService.ListMembers();
-                        break;
+                    case "1": membersService.ListMembers(); break;
+                    case "2": membersService.AddMember(); break;
+                    case "3": membersService.EditMember(); break;
+                    case "4": membersService.DeleteMember(); break;
+                    case "5": back = true; break;
+                    default: Console.WriteLine("Ungültige Eingabe!"); break;
+                }
+            }
+        }
 
-                    case "2":
-                        membersService.AddMember();
-                        break;
+        // Benutzer-Menü
+        private static void ShowUserMenu()
+        {
+            // Nur Admin darf Benutzer verwalten:
+            if (userService.LoggedInUser.Role != UserRole.Admin)
+            {
+                Console.WriteLine("Zugriff verweigert! Nur Admins dürfen Benutzer verwalten.");
+                return;
+            }
 
-                    case "3":
-                        membersService.EditMember();
-                        break;
+            bool back = false;
 
-                    case "4":
-                        membersService.DeleteMember();
-                        break;
+            while (!back)
+            {
+                Console.WriteLine("\n--- BENUTZER-MENÜ ---");
+                Console.WriteLine("1) Benutzer anzeigen");
+                Console.WriteLine("2) Benutzer hinzufügen");
+                Console.WriteLine("3) Benutzer löschen");
+                Console.WriteLine("4) Passwort ändern");
+                Console.WriteLine("5) Zurück");
+                Console.Write("Auswahl: ");
 
-                    case "5":
-                        back = true;
-                        break;
+                string input = Console.ReadLine();
 
-                    default:
-                        Console.WriteLine("Ungültige Eingabe!");
-                        break;
+                switch (input)
+                {
+                    case "1": userService.ListUsers(); break;
+                    case "2": userService.AddUser(); break;
+                    case "3": userService.DeleteUser(); break;
+                    case "4": userService.ChangePassword(); break;
+                    case "5": back = true; break;
+                    default: Console.WriteLine("Ungültige Eingabe!"); break;
                 }
             }
         }
     }
 }
-
 
