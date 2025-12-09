@@ -2,13 +2,12 @@
 using System.Collections.Generic;             // Ermöglicht Listen (List<T>)
 using System.Linq;                            // Ermöglicht Filtern, Sortieren, Gruppieren (LINQ)
 
-namespace FitMaster                           // Übergeordneter Namensraum für das gesamte Projekt
+namespace FitMaster
 {
     // ----------------------------------------
     // MODEL: MITGLIED
     // ----------------------------------------
-
-    public class Member                       // Klasse "Member" = Bauplan für ein Mitglied
+    public class Member
     {
         public int Id { get; set; }           // Eindeutige Mitgliedsnummer
         public string Name { get; set; }      // Name des Mitglieds
@@ -24,42 +23,38 @@ namespace FitMaster                           // Übergeordneter Namensraum für
     // ----------------------------------------
     // MODEL: ANWESENHEIT
     // ----------------------------------------
-
-    public class Attendance                    // Klasse für Anwesenheitseinträge
+    public class Attendance
     {
-        public int MemberId { get; set; }     // ID des Mitglieds, das eingecheckt hat
+        public int MemberId { get; set; }     // ID des Mitglieds
         public DateTime Date { get; set; }    // Datum und Uhrzeit des Check-ins
     }
 
     // ----------------------------------------
     // ENUM: BENUTZERROLLEN
     // ----------------------------------------
-
-    public enum UserRole                      // Rollen für Zugriffskontrolle
+    public enum UserRole
     {
-        Admin,                                 // Darf alles (Benutzer verwalten)
-        Mitarbeiter                            // Darf Mitglieder & Anwesenheit, aber keine Benutzer löschen
+        Admin,        // Vollzugriff
+        Mitarbeiter   // Eingeschränkter Zugriff
     }
 
     // ----------------------------------------
     // MODEL: BENUTZER
     // ----------------------------------------
-
-    public class User                          // Klasse für Login-Benutzer
+    public class User
     {
         public string Username { get; set; }   // Benutzername
         public string Password { get; set; }   // Passwort
-        public UserRole Role { get; set; }     // Rolle (Admin oder Mitarbeiter)
+        public UserRole Role { get; set; }     // Rolle (Admin / Mitarbeiter)
     }
 
     // ----------------------------------------
     // SERVICE: BENUTZER & LOGIN
     // ----------------------------------------
-
     public class UserService
     {
-        private List<User> users = new List<User>();   // Liste aller Benutzer
-        public User LoggedInUser { get; private set; } // Speichert, wer aktuell eingeloggt ist
+        private List<User> users = new List<User>();
+        public User LoggedInUser { get; private set; }
 
         public UserService()
         {
@@ -68,21 +63,21 @@ namespace FitMaster                           // Übergeordneter Namensraum für
             users.Add(new User { Username = "mitarbeiter", Password = "0000", Role = UserRole.Mitarbeiter });
         }
 
-        public bool Login()                   // Login-Funktion
+        public bool Login()
         {
             Console.WriteLine("\n--- Login ---");
 
             Console.Write("Benutzername: ");
-            string username = Console.ReadLine();  // Benutzername eingeben
+            string username = Console.ReadLine();
 
             Console.Write("Passwort: ");
-            string pw = Console.ReadLine();        // Passwort eingeben
+            string pw = Console.ReadLine();
 
-            foreach (var u in users)               // Benutzer in Liste durchsuchen
+            foreach (var u in users)
             {
                 if (u.Username == username && u.Password == pw)
                 {
-                    LoggedInUser = u;             // Speichern, wer eingeloggt ist
+                    LoggedInUser = u;
                     Console.WriteLine($"Login erfolgreich! Eingeloggt als: {u.Username} ({u.Role})");
                     return true;
                 }
@@ -92,34 +87,46 @@ namespace FitMaster                           // Übergeordneter Namensraum für
             return false;
         }
 
-        public void ListUsers()                  // Zeigt alle Benutzer an
+        public void ListUsers()
         {
             Console.WriteLine("\n--- Benutzerliste ---");
             foreach (var u in users)
                 Console.WriteLine($"{u.Username} ({u.Role})");
         }
 
-        public void AddUser()                     // Neuen Benutzer anlegen
+        public void AddUser()
         {
             Console.WriteLine("\n--- Benutzer hinzufügen ---");
 
-            Console.Write("Benutzername: ");
-            string name = Console.ReadLine();
+            string name;
+            do
+            {
+                Console.Write("Benutzername: ");
+                name = Console.ReadLine();
+            } while (string.IsNullOrWhiteSpace(name));
 
-            Console.Write("Passwort: ");
-            string pw = Console.ReadLine();
+            string pw;
+            do
+            {
+                Console.Write("Passwort: ");
+                pw = Console.ReadLine();
+            } while (string.IsNullOrWhiteSpace(pw));
 
-            Console.Write("Rolle (Admin/Mitarbeiter): ");
-            string r = Console.ReadLine().ToLower();
+            string roleInput;
+            UserRole role;
+            do
+            {
+                Console.Write("Rolle (Admin/Mitarbeiter): ");
+                roleInput = Console.ReadLine().ToLower();
+            } while (roleInput != "admin" && roleInput != "mitarbeiter");
 
-            UserRole role = r == "admin" ? UserRole.Admin : UserRole.Mitarbeiter;
+            role = roleInput == "admin" ? UserRole.Admin : UserRole.Mitarbeiter;
 
             users.Add(new User { Username = name, Password = pw, Role = role });
-
             Console.WriteLine("Benutzer erfolgreich angelegt!");
         }
 
-        public void DeleteUser()                 // Benutzer löschen
+        public void DeleteUser()
         {
             Console.WriteLine("\n--- Benutzer löschen ---");
 
@@ -144,7 +151,7 @@ namespace FitMaster                           // Übergeordneter Namensraum für
             Console.WriteLine("Benutzer gelöscht!");
         }
 
-        public void ChangePassword()             // Passwort ändern
+        public void ChangePassword()
         {
             Console.WriteLine("\n--- Passwort ändern ---");
 
@@ -159,9 +166,14 @@ namespace FitMaster                           // Übergeordneter Namensraum für
                 return;
             }
 
-            Console.Write("Neues Passwort: ");
-            u.Password = Console.ReadLine();
+            string newPw;
+            do
+            {
+                Console.Write("Neues Passwort: ");
+                newPw = Console.ReadLine();
+            } while (string.IsNullOrWhiteSpace(newPw));
 
+            u.Password = newPw;
             Console.WriteLine("Passwort geändert!");
         }
     }
@@ -169,41 +181,45 @@ namespace FitMaster                           // Übergeordneter Namensraum für
     // ----------------------------------------
     // SERVICE: MITGLIEDERVERWALTUNG
     // ----------------------------------------
-
     public class MembersService
     {
-        private List<Member> members;     // Alle Mitglieder
-        private int nextId = 2;           // Automatische ID-Vergabe
+        private List<Member> members;
+        private int nextId = 2;
 
         public MembersService()
         {
-            members = new List<Member>(); // Liste erstellen
-
-            // Beispielmitglied
+            members = new List<Member>();
             members.Add(new Member { Id = 1, Name = "Max Mustermann", Tarif = "Basic", IsActive = true });
         }
 
-        public List<Member> GetMembers() => members;  // Gibt Liste zurück
+        public List<Member> GetMembers() => members;
 
-        public void ListMembers()                     // Alle Mitglieder anzeigen
+        public void ListMembers()
         {
             Console.WriteLine("\n--- Mitgliederliste ---");
-
             foreach (var m in members)
                 Console.WriteLine(m.GetInfo());
         }
 
-        public void AddMember()                       // Neues Mitglied
+        public void AddMember()
         {
             Console.WriteLine("\n--- Neues Mitglied hinzufügen ---");
 
-            Console.Write("Name: ");
-            string name = Console.ReadLine();
+            string name;
+            do
+            {
+                Console.Write("Name: ");
+                name = Console.ReadLine();
+            } while (string.IsNullOrWhiteSpace(name));
 
-            Console.Write("Tarif (Basic/Premium/VIP): ");
-            string tarif = Console.ReadLine();
+            string tarif;
+            do
+            {
+                Console.Write("Tarif (Basic/Premium/VIP): ");
+                tarif = Console.ReadLine();
+            } while (string.IsNullOrWhiteSpace(tarif));
 
-            members.Add(new Member                     // Neues Objekt anlegen
+            members.Add(new Member
             {
                 Id = nextId++,
                 Name = name,
@@ -214,7 +230,7 @@ namespace FitMaster                           // Übergeordneter Namensraum für
             Console.WriteLine("Mitglied erfolgreich hinzugefügt!");
         }
 
-        public void EditMember()                      // Mitglied bearbeiten
+        public void EditMember()
         {
             Console.WriteLine("\n--- Mitglied bearbeiten ---");
             Console.Write("Mitglied-ID: ");
@@ -225,7 +241,7 @@ namespace FitMaster                           // Übergeordneter Namensraum für
                 return;
             }
 
-            var m = members.Find(x => x.Id == id);    // Mitglied suchen
+            var m = members.Find(x => x.Id == id);
 
             if (m == null)
             {
@@ -233,26 +249,23 @@ namespace FitMaster                           // Übergeordneter Namensraum für
                 return;
             }
 
-            // Neuer Name
             Console.Write("Neuer Name (leer = keine Änderung): ");
             string newName = Console.ReadLine();
-            if (newName != "") m.Name = newName;
+            if (!string.IsNullOrWhiteSpace(newName)) m.Name = newName;
 
-            // Neuer Tarif
             Console.Write("Neuer Tarif (leer = keine Änderung): ");
             string newTarif = Console.ReadLine();
-            if (newTarif != "") m.Tarif = newTarif;
+            if (!string.IsNullOrWhiteSpace(newTarif)) m.Tarif = newTarif;
 
-            // Aktivstatus ändern
             Console.Write("Aktiv? (j/n): ");
-            string a = Console.ReadLine();
+            string a = Console.ReadLine().ToLower();
             if (a == "j") m.IsActive = true;
-            if (a == "n") m.IsActive = false;
+            else if (a == "n") m.IsActive = false;
 
             Console.WriteLine("Mitglied aktualisiert!");
         }
 
-        public void DeleteMember()                   // Mitglied löschen
+        public void DeleteMember()
         {
             Console.WriteLine("\n--- Mitglied löschen ---");
             Console.Write("Mitglied-ID: ");
@@ -277,23 +290,21 @@ namespace FitMaster                           // Übergeordneter Namensraum für
     }
 
     // ----------------------------------------
-    // SERVICE: ANWESENHEIT / STATISTIKEN
+    // SERVICE: ANWESENHEIT & STATISTIK
     // ----------------------------------------
-
     public class AttendanceService
     {
-        private List<Attendance> attendance = new List<Attendance>(); // Alle Check-ins
-        private MembersService membersService;                        // Zugriff auf Mitglieder
+        private List<Attendance> attendance = new List<Attendance>();
+        private MembersService membersService;
 
         public AttendanceService(MembersService mem)
         {
             membersService = mem;
         }
 
-        public void CheckIn()                         // Check-in eines Mitglieds
+        public void CheckIn()
         {
             Console.WriteLine("\n--- Anwesenheit erfassen ---");
-
             Console.Write("Mitglied-ID: ");
 
             if (!int.TryParse(Console.ReadLine(), out int id))
@@ -310,51 +321,38 @@ namespace FitMaster                           // Übergeordneter Namensraum für
                 return;
             }
 
-            attendance.Add(new Attendance                // Check-in speichern
-            {
-                MemberId = id,
-                Date = DateTime.Now
-            });
-
+            attendance.Add(new Attendance { MemberId = id, Date = DateTime.Now });
             Console.WriteLine($"{member.Name} wurde eingecheckt!");
         }
 
-        public void ShowAttendance()                     // Alle Check-ins anzeigen
+        public void ShowAttendance()
         {
             Console.WriteLine("\n--- Anwesenheitsliste ---");
-
             foreach (var a in attendance)
             {
                 var m = membersService.GetMembers().First(x => x.Id == a.MemberId);
-
                 Console.WriteLine($"{m.Name} | {a.Date}");
             }
         }
 
-        public void ShowDailyStats()                    // Zeigt Check-ins von heute
+        public void ShowDailyStats()
         {
-            Console.WriteLine("\n--- Tagesstatistik ---");
-
             int count = attendance.Count(a => a.Date.Date == DateTime.Today);
-
-            Console.WriteLine($"Heutige Check-ins: {count}");
+            Console.WriteLine($"\nHeutige Check-ins: {count}");
         }
 
-        public void ShowMemberStats()                   // Statistiken über Mitglieder
+        public void ShowMemberStats()
         {
-            Console.WriteLine("\n--- Mitgliederstatistik ---");
-
             var members = membersService.GetMembers();
-
             int active = members.Count(m => m.IsActive);
             int inactive = members.Count(m => !m.IsActive);
 
+            Console.WriteLine("\n--- Mitgliederstatistik ---");
             Console.WriteLine($"Aktive Mitglieder: {active}");
             Console.WriteLine($"Inaktive Mitglieder: {inactive}");
 
             Console.WriteLine("\nMitglieder pro Tarif:");
             var groups = members.GroupBy(m => m.Tarif);
-
             foreach (var g in groups)
             {
                 Console.WriteLine($"{g.Key}: {g.Count()} Mitglieder");
@@ -365,43 +363,37 @@ namespace FitMaster                           // Übergeordneter Namensraum für
     // ----------------------------------------
     // HAUPTPROGRAMM / MENÜS
     // ----------------------------------------
-
     public class Program
     {
-        private static MembersService membersService;        // Für Mitgliederverwaltung
-        private static UserService userService;              // Für Login & Benutzerverwaltung
-        private static AttendanceService attendanceService;  // Für Anwesenheit & Statistik
+        private static MembersService membersService;
+        private static UserService userService;
+        private static AttendanceService attendanceService;
 
         public static void Main(string[] args)
         {
-            membersService = new MembersService();           // Objekte erstellen
+            membersService = new MembersService();
             userService = new UserService();
             attendanceService = new AttendanceService(membersService);
 
-            Console.Title = "FitMaster – Verwaltungssystem"; // Fenstertitel
+            Console.Title = "FitMaster – Verwaltungssystem";
 
-            ShowWelcome();                                   // Begrüßung
+            ShowWelcome();
 
-            while (!userService.Login()) { }                 // Login bis erfolgreich
+            while (!userService.Login()) { }
 
-            MainMenu();                                      // Hauptmenü starten
+            MainMenu();
         }
 
-        private static void ShowWelcome()                    // Begrüßungstext
+        private static void ShowWelcome()
         {
             Console.WriteLine("=======================================");
             Console.WriteLine("          FitMaster System");
             Console.WriteLine("=======================================\n");
         }
 
-        // -----------------------
-        // HAUPTMENÜ
-        // -----------------------
-
         private static void MainMenu()
         {
             bool run = true;
-
             while (run)
             {
                 Console.WriteLine("\n--- HAUPTMENÜ ---");
@@ -424,14 +416,9 @@ namespace FitMaster                           // Übergeordneter Namensraum für
             }
         }
 
-        // -----------------------
-        // MITGLIEDER-MENÜ
-        // -----------------------
-
         private static void MembersMenu()
         {
             bool back = false;
-
             while (!back)
             {
                 Console.WriteLine("\n--- MITGLIEDER-MENÜ ---");
@@ -453,14 +440,9 @@ namespace FitMaster                           // Übergeordneter Namensraum für
             }
         }
 
-        // -----------------------
-        // ANWESENHEITS-MENÜ
-        // -----------------------
-
         private static void AttendanceMenu()
         {
             bool back = false;
-
             while (!back)
             {
                 Console.WriteLine("\n--- ANWESENHEIT ---");
@@ -480,14 +462,9 @@ namespace FitMaster                           // Übergeordneter Namensraum für
             }
         }
 
-        // -----------------------
-        // STATISTIK-MENÜ
-        // -----------------------
-
         private static void StatsMenu()
         {
             bool back = false;
-
             while (!back)
             {
                 Console.WriteLine("\n--- STATISTIKEN ---");
@@ -503,10 +480,6 @@ namespace FitMaster                           // Übergeordneter Namensraum für
             }
         }
 
-        // -----------------------
-        // BENUTZER-MENÜ
-        // -----------------------
-
         private static void UserMenu()
         {
             if (userService.LoggedInUser.Role != UserRole.Admin)
@@ -516,7 +489,6 @@ namespace FitMaster                           // Übergeordneter Namensraum für
             }
 
             bool back = false;
-
             while (!back)
             {
                 Console.WriteLine("\n--- BENUTZER-MENÜ ---");
